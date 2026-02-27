@@ -7,7 +7,7 @@ const CoinOverview = async () => {
   let coin;
 
   try {
-    coin = await fetcher<CoinDetailsData>("/coins/bitcoin", {
+    coin = await fetcher<CoinDetailsData>("coins/bitcoin", {
       dex_pair_format: "symbol",
     });
   } catch (error) {
