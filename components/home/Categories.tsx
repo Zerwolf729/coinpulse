@@ -7,7 +7,7 @@ import { CategoriesFallback } from "./fallback";
 
 const Categories = async () => {
   try {
-    const categories = await fetcher<Category[]>("/coins/categories");
+    const categories = await fetcher<Category[]>("coins/categories");
 
     const columns: DataTableColumn<Category>[] = [
       {
