@@ -11,7 +11,7 @@ const TrendingCoins = async () => {
 
   try {
     trendingCoins = await fetcher<{ coins: TrendingCoin[] }>(
-      "/search/trending",
+      "search/trending",
       undefined,
       300,
     );
