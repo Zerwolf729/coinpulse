@@ -46,7 +46,7 @@ const ExchangeListings = ({ tickers }: { tickers?: Ticker[] }) => {
             <div className="relative exchange-name">
               <p>{ticker.market?.name || "-"}</p>
               {ticker.trade_url && (
-                <Link href={ticker.trade_url} target="_blank" />
+                <Link href={ticker.trade_url} target="_blank" rel="noopener noreferrer" />
               )}
             </div>
 

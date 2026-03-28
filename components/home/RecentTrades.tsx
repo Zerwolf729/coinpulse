@@ -9,18 +9,17 @@ interface Props {
 }
 
 const RecentTrades = ({ tickers = [] }: Props) => {
-  // 🔥 ambil max 7 data biar mirip UI
   const trades = useMemo(() => {
     return tickers.slice(0, 7).map((t) => {
       const price = t.last;
-      const amount = t.volume / 1000; // kecilin biar realistis
+      const amount = t.volume / 1000;
       const value = price * amount;
 
       return {
         price,
         amount,
         value,
-        type: Math.random() > 0.5 ? "buy" : "sell", // fake buy/sell
+        type: Math.random() > 0.5 ? "buy" : "sell",
         time: t.last_traded_at,
       };
     });
@@ -28,7 +27,7 @@ const RecentTrades = ({ tickers = [] }: Props) => {
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString(); // simple & aman (no Date.now ❌)
+    return date.toLocaleTimeString();
   };
 
   const columns: DataTableColumn<any>[] = [

@@ -17,10 +17,18 @@ const LiveDataWrapper = ({
   useEffect(() => {
     const fetchPrice = async () => {
       try {
-        const res = await fetch(`/api/price?coinId=${coinId}`);
+        const res = await fetch(
+          `/api/price?coinId=${encodeURIComponent(coinId)}`,
+        );
+
+        if (!res.ok) return;
+
         const data = await res.json();
 
-        setLivePrice(data[coinId]?.usd);
+        const price = data?.[coinId]?.usd;
+        if (typeof price === "number") {
+          setLivePrice(price);
+        }
       } catch (err) {
         console.error("Failed to fetch price:", err);
       }
@@ -28,7 +36,7 @@ const LiveDataWrapper = ({
 
     fetchPrice();
 
-    const interval = setInterval(fetchPrice, 5000); // 🔥 5 detik
+    const interval = setInterval(fetchPrice, 5000);
 
     return () => clearInterval(interval);
   }, [coinId]);

@@ -103,7 +103,6 @@ interface SearchCoin {
   };
 }
 
-// Chart Section Props (used in ChartSection.tsx)
 interface ChartSectionProps {
   coinData: {
     image: { large: string };
