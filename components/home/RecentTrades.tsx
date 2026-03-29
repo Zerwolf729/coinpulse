@@ -8,29 +8,50 @@ interface Props {
   tickers: Ticker[];
 }
 
+interface TradeRow {
+  price: number;
+  amount: number;
+  value: number;
+  type: "buy" | "sell";
+  time: string;
+}
+
+const getTradeType = (id: string, timestamp: string): "buy" | "sell" => {
+  const seed = id + timestamp;
+
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  return hash % 2 === 0 ? "buy" : "sell";
+};
+
+const formatTime = (timestamp: string) => {
+  const date = new Date(timestamp);
+  return date.toLocaleTimeString();
+};
+
 const RecentTrades = ({ tickers = [] }: Props) => {
-  const trades = useMemo(() => {
+  const trades = useMemo<TradeRow[]>(() => {
     return tickers.slice(0, 7).map((t) => {
-      const price = t.last;
-      const amount = t.volume / 1000;
+      const price = t.converted_last.usd;
+
+      const amount = 1;
+
       const value = price * amount;
 
       return {
         price,
         amount,
         value,
-        type: Math.random() > 0.5 ? "buy" : "sell",
-        time: t.last_traded_at,
+        type: getTradeType(t.base + t.target, t.timestamp),
+        time: t.timestamp,
       };
     });
   }, [tickers]);
 
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString();
-  };
-
-  const columns: DataTableColumn<any>[] = [
+  const columns: DataTableColumn<TradeRow>[] = [
     {
       header: "Price",
       cellClassName: "price-cell",

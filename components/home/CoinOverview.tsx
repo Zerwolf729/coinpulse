@@ -16,7 +16,6 @@ const CoinOverview = async () => {
       fetcher<OHLCData[]>("coins/bitcoin/ohlc", {
         vs_currency: "usd",
         days: 1,
-        
       }),
     ]);
 

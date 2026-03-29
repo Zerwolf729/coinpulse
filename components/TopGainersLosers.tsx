@@ -49,7 +49,6 @@ const TopGainersLosers = () => {
 
   return (
     <div id="top-gainers-losers">
-      {/* 🔥 Tabs */}
       <div className="tabs-list flex gap-6">
         <button
           onClick={() => setActiveTab("gainers")}
@@ -76,7 +75,6 @@ const TopGainersLosers = () => {
         </button>
       </div>
 
-      {/* 🔥 Content */}
       <div className="tabs-content mt-4 flex flex-col gap-3">
         {data.map((coin) => {
           const isUp = coin.price_change_percentage_24h > 0;
@@ -86,7 +84,6 @@ const TopGainersLosers = () => {
               key={coin.id}
               className="flex items-center justify-between p-3 rounded-xl bg-dark-400"
             >
-              {/* LEFT */}
               <div className="flex items-center gap-3">
                 <Image
                   src={coin.image}
@@ -104,7 +101,6 @@ const TopGainersLosers = () => {
                 </div>
               </div>
 
-              {/* RIGHT */}
               <div className="text-right">
                 <p className="font-semibold">
                   {formatCurrency(coin.current_price)}

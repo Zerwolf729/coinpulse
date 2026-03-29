@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import SearchTrigger from "./search/SearchTrigger";
 
 const Header = () => {
   const pathname = usePathname();
@@ -30,7 +31,7 @@ const Header = () => {
           >
             Home
           </Link>
-          <p>Search Modal</p>
+          <SearchTrigger />
 
           <Link
             href="/coins"

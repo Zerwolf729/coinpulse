@@ -8,34 +8,32 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatCurrency(
   value: number | null | undefined,
-  digits?: number,
-  currency?: string,
-  showSymbol?: boolean,
+  digits: number = 2,
+  currency: string = "USD",
+  showSymbol: boolean = true,
 ) {
   if (value === null || value === undefined || isNaN(value)) {
-    return showSymbol !== false ? "$0.00" : "0.00";
+    return showSymbol ? "$0.00" : "0.00";
   }
 
-  if (showSymbol === undefined || showSymbol === true) {
-    return value.toLocaleString(undefined, {
-      style: "currency",
-      currency: currency?.toUpperCase() || "USD",
-      minimumFractionDigits: digits ?? 2,
-      maximumFractionDigits: digits ?? 2,
-    });
-  }
-  return value.toLocaleString(undefined, {
-    minimumFractionDigits: digits ?? 2,
-    maximumFractionDigits: digits ?? 2,
+  const formatter = new Intl.NumberFormat("en-US", {
+    style: showSymbol ? "currency" : "decimal",
+    currency: currency.toUpperCase(),
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
   });
-}
 
-export function formatPercentage(change: number | null | undefined): string {
+  return formatter.format(value);
+}
+export function formatPercentage(
+  change: number | null | undefined,
+  digits: number = 1,
+): string {
   if (change === null || change === undefined || isNaN(change)) {
     return "0.0%";
   }
-  const formattedChange = change.toFixed(1);
-  return `${formattedChange}%`;
+
+  return `${change.toFixed(digits)}%`;
 }
 
 export function trendingClasses(value: number) {
@@ -49,9 +47,9 @@ export function trendingClasses(value: number) {
 }
 
 export function timeAgo(date: string | number | Date): string {
-  const now = new Date();
-  const past = new Date(date);
-  const diff = now.getTime() - past.getTime();
+  const now = Date.now();
+  const past = new Date(date).getTime();
+  const diff = now - past;
 
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(seconds / 60);
@@ -65,9 +63,8 @@ export function timeAgo(date: string | number | Date): string {
   if (days < 7) return `${days} day${days > 1 ? "s" : ""}`;
   if (weeks < 4) return `${weeks} week${weeks > 1 ? "s" : ""}`;
 
-  return past.toISOString().split("T")[0];
+  return new Date(date).toISOString().split("T")[0];
 }
-
 export function convertOHLCData(data: OHLCData[]) {
   return data
     .map((d) => ({
@@ -83,16 +80,16 @@ export function convertOHLCData(data: OHLCData[]) {
 }
 
 export const ELLIPSIS = "ellipsis" as const;
+
 export const buildPageNumbers = (
   currentPage: number,
   totalPages: number,
 ): (number | typeof ELLIPSIS)[] => {
   const MAX_VISIBLE_PAGES = 5;
-
   const pages: (number | typeof ELLIPSIS)[] = [];
 
   if (totalPages <= MAX_VISIBLE_PAGES) {
-    for (let i = 1; i <= totalPages; i += 1) {
+    for (let i = 1; i <= totalPages; i++) {
       pages.push(i);
     }
     return pages;
@@ -103,17 +100,13 @@ export const buildPageNumbers = (
   const start = Math.max(2, currentPage - 1);
   const end = Math.min(totalPages - 1, currentPage + 1);
 
-  if (start > 2) {
-    pages.push(ELLIPSIS);
-  }
+  if (start > 2) pages.push(ELLIPSIS);
 
-  for (let i = start; i <= end; i += 1) {
+  for (let i = start; i <= end; i++) {
     pages.push(i);
   }
 
-  if (end < totalPages - 1) {
-    pages.push(ELLIPSIS);
-  }
+  if (end < totalPages - 1) pages.push(ELLIPSIS);
 
   pages.push(totalPages);
 

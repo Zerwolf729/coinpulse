@@ -924,7 +924,6 @@
   }
 }
 
-/* Custom Scrollbar Styles */
 .custom-scrollbar::-webkit-scrollbar {
   width: 7px;
   height: 7px;
@@ -943,7 +942,6 @@
   background: #171a34;
 }
 
-/* Table Custom Scrollbar */
 .custom-scrollbar [data-slot="table-container"] {
   overflow-y: auto;
 }
