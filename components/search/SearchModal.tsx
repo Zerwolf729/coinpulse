@@ -18,7 +18,6 @@ interface Coin {
 
 interface MarketData {
   id: string;
-  current_price: number;
   price_change_percentage_24h: number;
 }
 
@@ -34,17 +33,8 @@ interface SearchResponse {
 
 interface MarketApiResponse {
   id: string;
-  current_price: number;
-  price_change_percentage_24h: number;
+  price_change_percentage_24h: number | null;
 }
-
-/* ================= UTILS ================= */
-
-const formatUSD = (value: number) =>
-  value.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 
 /* ================= COMPONENT ================= */
 
@@ -57,6 +47,14 @@ const SearchModal = () => {
   const [marketData, setMarketData] = useState<Record<string, MarketData>>({});
   const [loading, setLoading] = useState(false);
 
+  /* ================= HANDLER ================= */
+
+  const handleClose = () => {
+    setOpen(false);
+    setQuery("");
+    setResults([]);
+  };
+
   /* ================= KEYBOARD ================= */
 
   useEffect(() => {
@@ -65,7 +63,7 @@ const SearchModal = () => {
         e.preventDefault();
         setOpen(true);
       }
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") handleClose();
     };
 
     window.addEventListener("keydown", handleKey);
@@ -77,10 +75,13 @@ const SearchModal = () => {
   useEffect(() => {
     if (!open) return;
 
+    const controller = new AbortController();
+
     const fetchTrending = async () => {
       try {
         const res = await fetch(
           "https://api.coingecko.com/api/v3/search/trending",
+          { signal: controller.signal },
         );
 
         const data: TrendingResponse = await res.json();
@@ -93,22 +94,30 @@ const SearchModal = () => {
 
         const marketRes = await fetch(
           `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}`,
+          { signal: controller.signal },
         );
 
         const marketJson: MarketApiResponse[] = await marketRes.json();
 
         const mapped: Record<string, MarketData> = {};
         marketJson.forEach((coin) => {
-          mapped[coin.id] = coin;
+          mapped[coin.id] = {
+            id: coin.id,
+            price_change_percentage_24h: coin.price_change_percentage_24h ?? 0,
+          };
         });
 
         setMarketData(mapped);
       } catch (err) {
-        console.error("Trending fetch error:", err);
+        if ((err as Error).name !== "AbortError") {
+          console.error("Trending fetch error:", err);
+        }
       }
     };
 
     fetchTrending();
+
+    return () => controller.abort();
   }, [open]);
 
   /* ================= SEARCH ================= */
@@ -144,7 +153,10 @@ const SearchModal = () => {
 
         const mapped: Record<string, MarketData> = {};
         marketJson.forEach((coin) => {
-          mapped[coin.id] = coin;
+          mapped[coin.id] = {
+            id: coin.id,
+            price_change_percentage_24h: coin.price_change_percentage_24h ?? 0,
+          };
         });
 
         setMarketData(mapped);
@@ -165,7 +177,7 @@ const SearchModal = () => {
     };
   }, [query]);
 
-  /* ================= DERIVED STATE ================= */
+  /* ================= DERIVED ================= */
 
   const displayCoins = query ? results : trending;
 
@@ -175,9 +187,9 @@ const SearchModal = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="dialog w-full max-w-xl rounded-xl shadow-xl relative">
+      <div className="dialog w-full max-w-xl rounded-xl shadow-xl">
         {/* INPUT */}
-        <div className="cmd-input p-4 border-b border-dark-500 relative">
+        <div className="p-4 border-b border-dark-500 relative">
           <input
             autoFocus
             type="text"
@@ -188,13 +200,7 @@ const SearchModal = () => {
           />
 
           <button
-            onClick={() => {
-              if (query) {
-                setQuery("");
-              } else {
-                setOpen(false);
-              }
-            }}
+            onClick={() => (query ? setQuery("") : handleClose())}
             className="absolute right-4 top-1/2 -translate-y-1/2 text-purple-100 hover:text-white transition"
           >
             <X size={18} />
@@ -202,7 +208,7 @@ const SearchModal = () => {
         </div>
 
         {/* LIST */}
-        <div className="list custom-scrollbar overflow-y-auto max-h-96">
+        <div className="overflow-y-auto max-h-96 custom-scrollbar">
           {!query && (
             <p className="px-5 pt-4 text-xs text-purple-100 uppercase">
               Trending Coins
@@ -210,50 +216,49 @@ const SearchModal = () => {
           )}
 
           {loading && (
-            <p className="empty py-6 text-center text-sm">Searching...</p>
+            <p className="py-6 text-center text-sm text-purple-100">
+              Searching...
+            </p>
           )}
 
           {displayCoins.map((coin) => {
-            const market = marketData[coin.id];
-            const change = market?.price_change_percentage_24h ?? 0;
+            const change =
+              marketData[coin.id]?.price_change_percentage_24h ?? 0;
+
             const isUp = change >= 0;
 
             return (
               <Link
                 key={coin.id}
                 href={`/coins/${coin.id}`}
-                onClick={() => setOpen(false)}
-                className="search-item px-5 flex items-center justify-between gap-4 py-3 hover:bg-dark-400"
+                onClick={handleClose}
+                className="px-5 py-3 flex items-center justify-between hover:bg-dark-400/40 transition"
               >
-                {/* LEFT */}
-                <div className="coin-info flex items-center gap-3">
+                <div className="flex items-center gap-3">
                   <Image
                     src={coin.thumb || coin.image || "/placeholder.png"}
                     alt={coin.name}
-                    width={36}
-                    height={36}
+                    width={32}
+                    height={32}
                   />
-                  <div>
+
+                  <div className="flex flex-col">
                     <span className="font-medium text-white">{coin.name}</span>
-                    <span className="coin-symbol ml-2 text-sm text-gray-400">
-                      {coin.symbol.toUpperCase()}
+                    <span className="text-xs text-purple-100 uppercase">
+                      {coin.symbol}
                     </span>
                   </div>
                 </div>
 
-                {/* PRICE */}
-                <div className="coin-price text-right text-white text-sm">
-                  {market ? `$${formatUSD(market.current_price)}` : "-"}
-                </div>
-
-                {/* CHANGE */}
                 <div
-                  className={`coin-change flex items-center gap-1 text-sm ${
+                  className={`flex items-center gap-1 ${
                     isUp ? "text-green-400" : "text-red-500"
                   }`}
                 >
                   {isUp ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                  {Math.abs(change).toFixed(2)}%
+                  <span className="text-sm font-medium">
+                    {Math.abs(change).toFixed(2)}%
+                  </span>
                 </div>
               </Link>
             );
